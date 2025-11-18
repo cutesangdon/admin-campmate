@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchWithAuth } from '../api';
 
-// CampingZoneModal 컴포넌트는 변경 사항이 없습니다.
 function CampingZoneModal({ zone, onSave, onCancel }) {
     const [formData, setFormData] = useState({
         name: '',

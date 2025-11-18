@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchWithAuth } from '../api';
 
 function ReservationPage({ user }) {
+    // 초기값을 빈 배열 []로 설정
     const [reservations, setReservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -16,26 +17,24 @@ function ReservationPage({ user }) {
         'C': '취소됨'
     };
 
-    // --- 📝 [추가] 날짜 형식을 'YYYY-MM-DD HH:MM'으로 변환하는 함수 ---
     const formatDateTime = (isoString) => {
-        if (!isoString) return ''; // null이나 undefined 값 처리
+        if (!isoString) return ''; 
         const date = new Date(isoString);
         
-        // 숫자가 10보다 작을 때 앞에 0을 붙여주는 헬퍼 함수
         const pad = (num) => String(num).padStart(2, '0');
 
         const year = date.getFullYear();
-        const month = pad(date.getMonth() + 1); // getMonth()는 0부터 시작
+        const month = pad(date.getMonth() + 1); 
         const day = pad(date.getDate());
         const hours = pad(date.getHours());
         const minutes = pad(date.getMinutes());
 
         return `${year}-${month}-${day} ${hours}:${minutes}`;
     };
-    // -------------------------------------------------------------
 
     useEffect(() => {
         const fetchReservations = async () => {
+            // user 정보가 없으면 중단
             if (!user || !user.id) {
                 setLoading(false);
                 return;
@@ -44,19 +43,30 @@ function ReservationPage({ user }) {
             setLoading(true);
             setError("");
             try {
-                // 백엔드 API가 /api/reservations/admin/{id}/status?status=... 를 지원한다고 가정
                 const url = `/api/reservations/admin/${user.id}/status?status=${filterStatus}`;
                 const data = await fetchWithAuth(url);
-                setReservations(data);
+                
+                // --- 📝 [수정] 데이터가 배열인지 확인하는 방어 로직 추가 ---
+                if (Array.isArray(data)) {
+                    setReservations(data);
+                } else {
+                    // 데이터가 배열이 아니면(예: {}, null) 빈 배열로 초기화하고 로그 출력
+                    console.warn("서버로부터 배열이 아닌 데이터를 받았습니다:", data);
+                    setReservations([]);
+                }
+                // ----------------------------------------------------
+
             } catch (err) {
+                console.error("예약 조회 에러:", err);
                 setError(err.message);
+                setReservations([]); // 에러 발생 시에도 빈 배열로 초기화
             } finally {
                 setLoading(false);
             }
         };
         
         fetchReservations();
-    }, [user, filterStatus]); // user 또는 filterStatus가 변경될 때마다 데이터를 다시 불러옵니다.
+    }, [user, filterStatus]); 
 
     const handleFilterChange = (e) => {
         setFilterStatus(e.target.value);
@@ -91,7 +101,8 @@ function ReservationPage({ user }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {reservations.length === 0 ? (
+                    {/* --- 📝 [수정] 렌더링 시 안전하게 배열 확인 --- */}
+                    {!Array.isArray(reservations) || reservations.length === 0 ? (
                         <tr>
                             <td colSpan="6" align="center">해당 상태의 예약 데이터가 없습니다.</td>
                         </tr>
@@ -107,6 +118,7 @@ function ReservationPage({ user }) {
                             </tr>
                         ))
                     )}
+                    {/* ------------------------------------------ */}
                 </tbody>
             </table>
         </div>

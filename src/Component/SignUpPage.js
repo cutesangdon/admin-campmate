@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_BASE_URL } from '../api';
 import { useNavigate, Link } from "react-router-dom";
 import PostcodeModal from './PostcodeModal'; // 📝 [추가] 우편번호 모달 import
 
@@ -82,7 +83,7 @@ function SignUpPage() {
         // ------------------------------------------
 
         try {
-            const res = await fetch("http://localhost:8080/api/admins/signup", {
+            const res = await fetch(`${API_BASE_URL}/api/admins/signup`, {
                 method: "POST",
                 body: formData
             });
